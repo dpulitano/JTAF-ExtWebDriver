@@ -16,10 +16,15 @@
  */
 package org.finra.jtaf.ewd.widget.element;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMResult;
@@ -28,6 +33,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.commons.io.FileUtils;
 import org.ccil.cowan.tagsoup.Parser;
 import org.finra.jtaf.ewd.ExtWebDriver;
 import org.finra.jtaf.ewd.HighlightProvider;
@@ -42,11 +48,15 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.SearchContext;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.internal.Locatable;
+import org.openqa.selenium.remote.Augmenter;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
@@ -1256,7 +1266,81 @@ public class Element implements IElement {
 		jse.executeScript("arguments[0].focus();", findElement());
 	}
 	
-
+	/***
+	 * You can use this method to take screenshots of elements / control pictures to compare with.
+	 * Note that the file should be a png.
+	 * 
+	 * @param toSaveAs
+	 * @throws IOException 
+	 * @throws WidgetTimeoutException 
+	 */
+	public void captureElementScreenshot(File toSaveAs) throws IOException, WidgetException {
+		
+		for(int i = 0; i < 10; i++) { //Loop up to 10x to ensure a clean screenshot was taken
+			//log.info("Taking screen shot of locator " + element.getByLocator() + " ... attempt #" + (i+1));
+			
+			//Scroll to element
+			this.scrollTo();
+			
+			//Take picture of the page
+			WebDriver wd = getGUIDriver().getWrappedDriver();
+			File screenshot;
+			boolean isRemote = false;
+			if(!(wd instanceof RemoteWebDriver)) {
+				screenshot = ((TakesScreenshot) wd).getScreenshotAs(OutputType.FILE);		
+			}
+			else {
+				Augmenter augmenter = new Augmenter();
+				screenshot = ((TakesScreenshot) augmenter.augment(wd)).getScreenshotAs(OutputType.FILE);
+				isRemote = true;
+			}
+			BufferedImage fullImage = ImageIO.read(screenshot);
+			WebElement ele = this.getWebElement();
+			
+			//Parse out the picture of the element
+			Point point = ele.getLocation();
+			int eleWidth = ele.getSize().getWidth();
+			int eleHeight = ele.getSize().getHeight();
+			int x; 
+			int y;
+			if(isRemote) {
+				x = ((Locatable)ele).getCoordinates().inViewPort().getX();
+				y = ((Locatable)ele).getCoordinates().inViewPort().getY();
+			}
+			else {
+				x = point.getX();
+				y = point.getY();
+			}
+			//log.debug("Screenshot coordinates x: "+x+", y: "+y);
+			BufferedImage eleScreenshot = fullImage.getSubimage(x, y, eleWidth, eleHeight);	
+			ImageIO.write(eleScreenshot, "png", screenshot);
+			
+			//Ensure clean snapshot (sometimes WebDriver takes bad pictures and they turn out all black)
+			if(!isScreenshotBlack(ImageIO.read(screenshot))) {
+				FileUtils.copyFile(screenshot, toSaveAs);
+				break;
+			}
+		}
+	}
+	
+	private boolean isScreenshotBlack(BufferedImage var) {
+		double[] varArr = new double[var.getWidth()*var.getHeight()*3];
+		//unroll pixels
+		for(int i = 0; i < var.getHeight(); i++) {
+			for(int j = 0; j < var.getWidth(); j++) {
+				varArr[i*var.getWidth() + j + 0] = new Color(var.getRGB(j, i)).getRed();
+				varArr[i*var.getWidth() + j + 1] = new Color(var.getRGB(j, i)).getGreen();
+				varArr[i*var.getWidth() + j + 2] = new Color(var.getRGB(j, i)).getBlue();
+			}
+		}
+		
+		//test if all are black
+		for(int i=0;i!=varArr.length;i++){
+			if(varArr[i] != 0)
+				return false;
+		}
+		return true;
+	}
 	
 	private static class EByFirstMatching extends StringLocatorAwareBy {
 
