@@ -17,6 +17,8 @@
 package org.finra.jtaf.ewd.impl;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,18 +37,24 @@ import javax.xml.xpath.XPathFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.io.FileUtils;
 import org.ccil.cowan.tagsoup.Parser;
 import org.finra.jtaf.ewd.ExtWebDriver;
 import org.finra.jtaf.ewd.HighlightProvider;
 import org.finra.jtaf.ewd.TimeOutException;
+import org.finra.jtaf.ewd.session.SessionManager;
 import org.finra.jtaf.ewd.widget.IElement;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.HasCapabilities;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.remote.Augmenter;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
@@ -883,5 +891,18 @@ public class DefaultExtWebDriver implements ExtWebDriver, HighlightProvider {
 	@Override
 	public String getSessionId() {
 		return this.sessionId;
+	}
+	
+	@Override
+	public void takeScreenshotOfPage(File toSaveAs) throws IOException {
+		File screenshot;
+		if(!(wd instanceof RemoteWebDriver)) {
+			screenshot = ((TakesScreenshot) wd).getScreenshotAs(OutputType.FILE);		
+		}
+		else {
+			Augmenter augmenter = new Augmenter();
+			screenshot = ((TakesScreenshot) augmenter.augment(wd)).getScreenshotAs(OutputType.FILE);
+		}
+		FileUtils.copyFile(screenshot, toSaveAs);
 	}
 }

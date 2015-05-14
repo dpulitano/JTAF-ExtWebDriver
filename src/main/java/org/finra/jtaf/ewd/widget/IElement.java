@@ -16,6 +16,9 @@
  */
 package org.finra.jtaf.ewd.widget;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.finra.jtaf.ewd.timer.WidgetTimeoutException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -513,5 +516,15 @@ public interface IElement {
      * @throws WidgetException
      */
     public void focusOn() throws WidgetException;
+    
+    
+    /***
+     * Implementing this method would allow for the element to have a screenshot taken for it
+     * 
+     * @param toSaveAs
+     * @throws IOException
+     * @throws WidgetException
+     */
+    public void captureElementScreenshot(File toSaveAs) throws IOException, WidgetException;
 
 }

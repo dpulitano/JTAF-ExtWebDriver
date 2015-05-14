@@ -20,7 +20,7 @@ import java.io.File;
 
 import org.finra.jtaf.ewd.ExtWebDriver;
 import org.finra.jtaf.ewd.session.SessionManager;
-import org.finra.jtaf.ewd.utils.ScreenshotUtils;
+import org.finra.jtaf.ewd.utils.ScreenshotComparator;
 import org.finra.jtaf.ewd.widget.IElement;
 import org.finra.jtaf.ewd.widget.WidgetException;
 import org.finra.jtaf.ewd.widget.element.html.Image;
@@ -72,7 +72,7 @@ public class ElementBrowserOnlyTest {
     	Image im = new Image("//img[@src=\"finralogo.jpg\"]");
     	im.waitForVisible();
     	
-    	Assert.assertTrue("The screenshots are similar", ScreenshotUtils.isSimilarToScreenshot(
+    	Assert.assertTrue("The screenshots are similar", ScreenshotComparator.isElementSimilarToScreenshot(
     			im, new File("src/test/resources/webapp/finralogo.jpg"), 
     			new File("testScreenshots/screenshot.png")));
     }

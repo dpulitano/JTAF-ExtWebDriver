@@ -17,6 +17,8 @@
 
 package org.finra.jtaf.ewd;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -418,5 +420,16 @@ public interface ExtWebDriver extends WebDriver {
 	 * Selects the previously selected frame
 	 */
 	public void selectLastFrame();
+	
+	/***
+	 * Take a screenshot of the browser content. Note that while using RemoteWebDriver sessions (ie: with
+	 * Sauce Labs), the screenshot will be a full page of content--not only the visible content where the
+	 * page is scrolled (as when using a non-RemoteWebDriver session).
+	 * 
+	 * @param toSaveAs - name of the file to save the picture in (Note: must be PNG)
+	 * @throws IOException
+	 * 		if problems saving file
+	 */
+	public void takeScreenshotOfPage(File toSaveAs) throws IOException;
 
 }
